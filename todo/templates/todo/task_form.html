@@ -1,0 +1,347 @@
+{% extends 'todo/base.html' %}
+
+{% block title %}{% if task %}Edit Task{% else %}Create Task{% endif %} - TODO App{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .form-header h2 {
+        font-size: 2em;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .form-header p {
+        color: #6c757d;
+    }
+
+    .form-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        font-size: 1em;
+    }
+
+    .form-label .required {
+        color: #dc3545;
+        margin-left: 3px;
+    }
+
+    .form-label .optional {
+        color: #6c757d;
+        font-weight: normal;
+        font-size: 0.9em;
+        margin-left: 5px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 5px;
+        font-size: 1em;
+        transition: all 0.3s;
+        font-family: inherit;
+        background: white;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        font-size: 1.2em;
+        padding: 5px;
+    }
+
+    input[type="time"] {
+        min-height: 45px;
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .form-help {
+        font-size: 0.9em;
+        color: #6c757d;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .datetime-info {
+        background: #e7f3ff;
+        border-left: 4px solid #0066cc;
+        padding: 12px;
+        border-radius: 5px;
+        margin-top: 10px;
+        font-size: 0.9em;
+        color: #004080;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid #e9ecef;
+    }
+
+    .errorlist {
+        list-style: none;
+        margin: 5px 0 0 0;
+        padding: 0;
+    }
+
+    .errorlist li {
+        color: #dc3545;
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
+
+    .form-control.error {
+        border-color: #dc3545;
+    }
+
+    .back-link {
+        color: #667eea;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .back-link:hover {
+        color: #764ba2;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .checkbox-group label {
+        margin: 0;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <a href="{% url 'task_list' %}" class="back-link">
+        ← Back to Tasks
+    </a>
+
+    <div class="form-header">
+        <h2>{% if task %}Edit Task{% else %}Create New Task{% endif %}</h2>
+        <p>{% if task %}Update the details of your task{% else %}Add a new task to your list{% endif %}</p>
+    </div>
+
+    <div class="form-card">
+        <form method="post" id="taskForm">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_title" class="form-label">
+                    Title<span class="required">*</span>
+                </label>
+                <input
+                    type="text"
+                    name="title"
+                    id="id_title"
+                    class="form-control {% if form.title.errors %}error{% endif %}"
+                    value="{% if task %}{{ task.title }}{% endif %}"
+                    placeholder="Enter task title"
+                    required
+                    maxlength="200"
+                >
+                {% if form.title.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.title.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <small class="form-help">A clear and concise title for your task</small>
+            </div>
+
+            <div class="form-group">
+                <label for="id_description" class="form-label">
+                    Description<span class="optional">(optional)</span>
+                </label>
+                <textarea
+                    name="description"
+                    id="id_description"
+                    class="form-control {% if form.description.errors %}error{% endif %}"
+                    placeholder="Enter task description"
+                >{% if task %}{{ task.description }}{% endif %}</textarea>
+                {% if form.description.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.description.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <small class="form-help">Add more details about this task</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_due_date" class="form-label">
+                        Due Date<span class="optional">(optional)</span>
+                    </label>
+                    <input
+                        type="date"
+                        name="due_date"
+                        id="id_due_date"
+                        class="form-control {% if form.due_date.errors %}error{% endif %}"
+                        value="{% if task and task.due_date %}{{ task.due_date|date:'Y-m-d' }}{% endif %}"
+                    >
+                    {% if form.due_date.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.due_date.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_due_time" class="form-label">
+                        Due Time<span class="optional">(optional)</span>
+                    </label>
+                    <input
+                        type="time"
+                        name="due_time"
+                        id="id_due_time"
+                        class="form-control {% if form.due_time.errors %}error{% endif %}"
+                        value="{% if task and task.due_time %}{{ task.due_time|time:'H:i' }}{% endif %}"
+                    >
+                    {% if form.due_time.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.due_time.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="datetime-info">
+                ℹ️ Due date and time are optional. Leave blank if no deadline is needed.
+            </div>
+
+            {% if task %}
+            <div class="form-group" style="margin-top: 25px;">
+                <div class="checkbox-group">
+                    <input
+                        type="checkbox"
+                        name="completed"
+                        id="id_completed"
+                        {% if task.is_completed %}checked{% endif %}
+                    >
+                    <label for="id_completed" class="form-label">Mark as completed</label>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    {% if task %}💾 Update Task{% else %}➕ Create Task{% endif %}
+                </button>
+                <a href="{% url 'task_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('taskForm').addEventListener('submit', function(e) {
+        const title = document.getElementById('id_title').value.trim();
+
+        if (!title) {
+            e.preventDefault();
+            alert('Please enter a task title');
+            document.getElementById('id_title').focus();
+            return false;
+        }
+    });
+
+    const titleInput = document.getElementById('id_title');
+    const titleGroup = titleInput.closest('.form-group');
+
+    const counter = document.createElement('small');
+    counter.className = 'form-help';
+    counter.style.float = 'right';
+    titleGroup.appendChild(counter);
+
+    function updateCounter() {
+        const length = titleInput.value.length;
+        const maxLength = titleInput.getAttribute('maxlength') || 200;
+        counter.textContent = `${length}/${maxLength} characters`;
+
+        if (length > maxLength * 0.9) {
+            counter.style.color = '#dc3545';
+        } else {
+            counter.style.color = '#6c757d';
+        }
+    }
+
+    titleInput.addEventListener('input', updateCounter);
+    updateCounter();
+
+    const textarea = document.getElementById('id_description');
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    console.log('Form initialized');
+</script>
+{% endblock %}
